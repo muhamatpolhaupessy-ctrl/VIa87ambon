@@ -1,0 +1,428 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARENA ILMU - Fantasy Battle</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;color:white;
+ background:linear-gradient(145deg,#10143b,#29205d,#633b83);
+ min-height:100vh;
+}
+header{text-align:center;padding:25px 12px}
+header h1{font-size:34px;color:#ffe47a;margin:5px}
+header p{color:#ded7ff}
+.container{max-width:760px;margin:auto;padding:14px}
+.panel{
+ background:#ffffff13;border:1px solid #ffffff35;
+ border-radius:20px;padding:20px;margin-bottom:16px;
+ box-shadow:0 8px 25px #0003;
+}
+h2{color:#ffe47a}
+h3{color:#ffe47a}
+input,select{
+ width:100%;padding:13px;margin:8px 0;
+ border:0;border-radius:10px;font-size:16px;
+}
+button{
+ width:100%;padding:14px;margin:7px 0;
+ border:0;border-radius:12px;
+ background:linear-gradient(90deg,#f5bd45,#ffe27b);
+ color:#39234d;font-weight:bold;font-size:15px;
+ cursor:pointer;
+}
+button:disabled{opacity:.5}
+.hidden{display:none!important}
+.heroes{
+ display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+}
+.hero{
+ background:#30265c;border:2px solid #7770a9;
+ color:white;padding:12px;border-radius:14px;
+ cursor:pointer;text-align:center;
+}
+.hero.selected{border:3px solid #ffdf63;background:#55417e}
+.hero .emoji{font-size:42px}
+.hero h3{margin:5px}
+.hero p{font-size:12px}
+.stats{display:flex;gap:8px}
+.stat{
+ flex:1;text-align:center;padding:12px 5px;
+ background:#ffffff19;border-radius:12px;
+ font-size:13px;
+}
+.stat b{font-size:19px}
+.bar{height:12px;background:#ffffff30;border-radius:20px;overflow:hidden}
+.fill{height:100%;background:#53e7a0;width:100%;transition:.3s}
+.option{
+ background:#ffffff20;color:white;
+ border:1px solid #ffffff45;text-align:left;
+}
+.option:disabled{opacity:.7}
+#question{font-size:20px;line-height:1.5}
+#feedback{min-height:35px}
+footer{text-align:center;color:#ccc;padding:20px;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+<h1>🏰 ARENA ILMU</h1>
+<p>Belajar • Bertarung • Menjadi Juara!</p>
+</header>
+
+<main class="container">
+
+<!-- HALAMAN UTAMA -->
+<section id="home" class="panel">
+<h2>⚔️ Selamat Datang, Pahlawan!</h2>
+<p>Siapkan dirimu untuk petualangan ilmu pengetahuan!</p>
+
+<label>Nama pemain</label>
+<input id="player" placeholder="Nama siswa">
+
+<label>Mata pelajaran</label>
+<select id="subject">
+<option>IPAS</option>
+<option>Matematika</option>
+<option>Bahasa Indonesia</option>
+<option>Bahasa Inggris</option>
+<option>IPA</option>
+<option>IPS</option>
+<option>Pendidikan Pancasila</option>
+<option>Semua Mata Pelajaran</option>
+</select>
+
+<label>Mode pertandingan</label>
+<select id="mode">
+<option value="solo">⚔️ Solo Battle</option>
+<option value="team">🛡️ Team Battle (demo)</option>
+</select>
+
+<label>Jumlah pemain (rencana room)</label>
+<select id="players">
+<option value="1">1 pemain</option>
+<option value="10">10 pemain</option>
+<option value="20">20 pemain</option>
+<option value="40">40 pemain</option>
+<option value="45">45 pemain</option>
+</select>
+
+<h3>🛡️ Pilih Pahlawanmu</h3>
+<div class="heroes">
+
+<button class="hero selected" onclick="choose('wizard',this)">
+<div class="emoji">🧙</div>
+<h3>Penyihir</h3>
+<p>Magic Blast<br>Bonus serangan +30</p>
+</button>
+
+<button class="hero" onclick="choose('knight',this)">
+<div class="emoji">🛡️</div>
+<h3>Kesatria</h3>
+<p>Shield Guard<br>Blokir serangan</p>
+</button>
+
+<button class="hero" onclick="choose('archer',this)">
+<div class="emoji">🏹</div>
+<h3>Pemanah</h3>
+<p>Arrow Storm<br>Bonus serangan +20</p>
+</button>
+
+<button class="hero" onclick="choose('healer',this)">
+<div class="emoji">✨</div>
+<h3>Penyembuh</h3>
+<p>Healing Light<br>Pulihkan HP</p>
+</button>
+
+</div>
+
+<label>Nama hero pilihanmu</label>
+<input id="heroName" maxlength="18" placeholder="Contoh: KsatriaHebat">
+
+<button onclick="start()">MASUK ARENA ⚔️</button>
+</section>
+
+<!-- HALAMAN PERTANDINGAN -->
+<section id="game" class="panel hidden">
+<h2 id="battleTitle">⚔️ ARENA BATTLE</h2>
+
+<div class="stats">
+<div class="stat">❤️ HP<br><b id="hp">100</b></div>
+<div class="stat">⭐ Poin<br><b id="score">0</b></div>
+<div class="stat">📚 Soal<br><b id="number">1</b></div>
+</div>
+
+<h3>🧙 Pahlawan</h3>
+<p id="heroInfo"></p>
+<div class="bar"><div class="fill" id="heroBar"></div></div>
+
+<h3>👹 Monster</h3>
+<p>Energi monster: <b id="monsterHP">100</b></p>
+<div class="bar"><div class="fill" id="monsterBar" style="background:#ff7777"></div></div>
+
+<button id="skillBtn" onclick="useSkill()">✨ GUNAKAN SKILL</button>
+<p id="skillMessage">Skill siap digunakan!</p>
+
+<hr style="border-color:#ffffff30">
+
+<p id="question"></p>
+<div id="answers"></div>
+<p id="feedback"></p>
+
+<button id="nextBtn" class="hidden" onclick="next()">SOAL BERIKUTNYA ➜</button>
+</section>
+
+<!-- HALAMAN HASIL -->
+<section id="result" class="panel hidden">
+<h2>🏆 HASIL PERTANDINGAN</h2>
+<h1 id="resultTitle">SELAMAT!</h1>
+<p id="resultText"></p>
+<h2 id="finalScore"></h2>
+<button onclick="location.reload()">MAIN LAGI 🔄</button>
+</section>
+
+</main>
+
+<footer>ARENA ILMU © 2026 | Dunia Para Pahlawan</footer>
+
+<script>
+const heroes={
+ wizard:{name:"Penyihir",emoji:"🧙",skill:"Magic Blast"},
+ knight:{name:"Kesatria",emoji:"🛡️",skill:"Shield Guard"},
+ archer:{name:"Pemanah",emoji:"🏹",skill:"Arrow Storm"},
+ healer:{name:"Penyembuh",emoji:"✨",skill:"Healing Light"}
+};
+
+const bank={
+ IPAS:[
+ ["Apa sumber energi utama bagi bumi?",["Bulan","Matahari","Angin","Air"],1],
+ ["Organ tubuh untuk bernapas adalah?",["Jantung","Lambung","Paru-paru","Ginjal"],2],
+ ["Hewan pemakan tumbuhan disebut?",["Karnivora","Herbivora","Omnivora","Predator"],1],
+ ["Apa yang dibutuhkan tumbuhan untuk fotosintesis?",["Cahaya matahari","Plastik","Besi","Kaca"],0],
+ ["Air yang berubah menjadi uap disebut?",["Membeku","Menguap","Mencair","Mengembun"],1],
+ ["Bagian tumbuhan yang menyerap air adalah?",["Daun","Bunga","Akar","Buah"],2],
+ ["Planet tempat manusia tinggal adalah?",["Mars","Bumi","Venus","Jupiter"],1]
+ ],
+ Matematika:[
+ ["12 + 15 = ?",["25","26","27","28"],2],
+ ["8 × 7 = ?",["54","56","58","64"],1],
+ ["Setengah dari 100 adalah?",["25","40","50","75"],2],
+ ["100 - 35 = ?",["55","65","75","85"],1],
+ ["9 × 9 = ?",["72","81","89","99"],1]
+ ],
+ "Bahasa Indonesia":[
+ ["Lawan kata besar adalah?",["Tinggi","Kecil","Panjang","Lebar"],1],
+ ["Kalimat tanya diakhiri tanda?",["Titik","Koma","Tanya","Seru"],2],
+ ["Sinonim kata indah adalah?",["Cantik","Buruk","Jelek","Kotor"],0],
+ ["Kata baku yang benar adalah?",["Apotik","Apotek","Apotick","Apoteg"],1]
+ ],
+ "Bahasa Inggris":[
+ ["Bahasa Inggris apel adalah?",["Apple","Orange","Grape","Mango"],0],
+ ["Arti kata Book adalah?",["Meja","Buku","Kursi","Pintu"],1],
+ ["Bahasa Inggris kucing adalah?",["Dog","Bird","Cat","Fish"],2]
+ ],
+ IPA:[
+ ["Planet tempat manusia tinggal adalah?",["Mars","Bumi","Venus","Jupiter"],1],
+ ["Hewan yang bertelur disebut?",["Vivipar","Ovipar","Mamalia","Herbivora"],1],
+ ["Pusat tata surya adalah?",["Bulan","Bumi","Matahari","Mars"],2]
+ ],
+ IPS:[
+ ["Indonesia merdeka pada tahun?",["1942","1945","1950","1965"],1],
+ ["Ibu kota Indonesia saat ini dalam konteks pemerintahan nasional adalah?",["Jakarta","Bandung","Surabaya","Medan"],0]
+ ],
+ "Pendidikan Pancasila":[
+ ["Berapa jumlah sila Pancasila?",["3","4","5","6"],2],
+ ["Lambang sila pertama adalah?",["Bintang","Rantai","Pohon","Padi"],0]
+ ]
+};
+
+let selected="wizard";
+let name="",player="";
+let hp=100,monster=100,score=0,xp=0;
+let questions=[],index=0,answered=false;
+let skillReady=true,shield=false,bonus=0;
+
+function choose(type,button){
+ selected=type;
+ document.querySelectorAll(".hero").forEach(x=>x.classList.remove("selected"));
+ button.classList.add("selected");
+}
+
+function start(){
+ player=document.getElementById("player").value.trim()||"Pahlawan";
+ name=document.getElementById("heroName").value.trim();
+
+ if(!name){
+  alert("Masukkan nama hero terlebih dahulu!");
+  return;
+ }
+
+ const mode=document.getElementById("mode").value;
+ const players=Number(document.getElementById("players").value);
+
+ if(mode==="solo"&&players!==1){
+  alert("Solo Battle hanya untuk 1 pemain.");
+  return;
+ }
+ if(mode==="team"&&players===1){
+  alert("Pilih jumlah pemain untuk Team Battle.");
+  return;
+ }
+
+ const subject=document.getElementById("subject").value;
+ questions=subject==="Semua Mata Pelajaran"
+ ? Object.values(bank).flat()
+ : [...(bank[subject]||bank.IPAS)];
+
+ questions.sort(()=>Math.random()-.5);
+
+ hp=100;monster=100;score=0;xp=0;index=0;
+ skillReady=true;shield=false;bonus=0;
+
+ document.getElementById("home").classList.add("hidden");
+ document.getElementById("game").classList.remove("hidden");
+ document.getElementById("battleTitle").textContent=
+ mode==="team"?"🛡️ TEAM BATTLE - DEMO":"⚔️ SOLO BATTLE";
+ document.getElementById("heroInfo").textContent=
+ heroes[selected].emoji+" "+name+" ("+heroes[selected].name+")";
+
+ render();
+}
+
+function render(){
+ answered=false;
+ const q=questions[index];
+
+ document.getElementById("question").textContent=
+ "SOAL "+(index+1)+": "+q[0];
+
+ document.getElementById("feedback").textContent="";
+ document.getElementById("nextBtn").classList.add("hidden");
+ document.getElementById("skillMessage").textContent=
+ skillReady?"Skill siap digunakan!":"Skill sudah digunakan pada giliran ini.";
+
+ const area=document.getElementById("answers");
+ area.innerHTML="";
+
+ q[1].forEach((answer,i)=>{
+  const b=document.createElement("button");
+  b.className="option";
+  b.textContent=String.fromCharCode(65+i)+". "+answer;
+  b.onclick=()=>answerQuestion(i);
+  area.appendChild(b);
+ });
+
+ update();
+}
+
+function useSkill(){
+ if(!skillReady||answered)return;
+
+ skillReady=false;
+
+ if(selected==="wizard"){
+  bonus=30;
+  message("🔮 Magic Blast aktif! Bonus serangan +30.");
+ }
+ if(selected==="archer"){
+  bonus=20;
+  message("🏹 Arrow Storm aktif! Bonus serangan +20.");
+ }
+ if(selected==="knight"){
+  shield=true;
+  message("🛡️ Shield aktif! Serangan monster berikutnya diblokir.");
+ }
+ if(selected==="healer"){
+  hp=Math.min(100,hp+30);
+  message("✨ Healing Light! HP pulih 30.");
+ }
+ update();
+}
+
+function message(t){
+ document.getElementById("skillMessage").textContent=t;
+}
+
+function answerQuestion(choice){
+ if(answered)return;
+ answered=true;
+
+ const q=questions[index];
+ document.querySelectorAll(".option").forEach(b=>b.disabled=true);
+
+ if(choice===q[2]){
+  let damage=20+bonus;
+  monster=Math.max(0,monster-damage);
+  score+=100;
+  xp+=20;
+  document.getElementById("feedback").textContent=
+   "🎉 BENAR! Serangan "+damage+" damage! +100 poin.";
+  document.getElementById("feedback").style.color="#70ffad";
+ }else{
+  if(shield){
+   message("🛡️ Shield berhasil memblokir serangan!");
+  }else{
+   hp=Math.max(0,hp-15);
+  }
+  document.getElementById("feedback").textContent=
+   "💫 Belum tepat. Coba lagi di soal berikutnya!";
+  document.getElementById("feedback").style.color="#ffb0b0";
+ }
+
+ bonus=0;
+ shield=false;
+ update();
+
+ document.getElementById("nextBtn").classList.remove("hidden");
+ document.getElementById("nextBtn").textContent=
+ (index===questions.length-1||hp===0||monster===0)
+ ?"LIHAT HASIL 🏆":"SOAL BERIKUTNYA ➜";
+}
+
+function update(){
+ document.getElementById("hp").textContent=hp;
+ document.getElementById("score").textContent=score;
+ document.getElementById("number").textContent=index+1;
+ document.getElementById("heroBar").style.width=hp+"%";
+ document.getElementById("monsterHP").textContent=monster;
+ document.getElementById("monsterBar").style.width=monster+"%";
+ document.getElementById("skillBtn").disabled=!skillReady||answered;
+}
+
+function next(){
+ if(!answered)return;
+
+ if(index===questions.length-1||hp===0||monster===0){
+  finish();
+ }else{
+  index++;
+  skillReady=true;
+  render();
+ }
+}
+
+function finish(){
+ document.getElementById("game").classList.add("hidden");
+ document.getElementById("result").classList.remove("hidden");
+
+ document.getElementById("resultTitle").textContent=
+ monster===0?"🏆 MONSTER DIKALAHKAN!":
+ hp===0?"⚔️ PERTANDINGAN SELESAI":"🎉 SELESAI!";
+
+ document.getElementById("resultText").textContent=
+ "Pemain: "+player+
+ " | Hero: "+name+
+ " | Karakter: "+heroes[selected].name+
+ " | XP: "+xp+
+ " | Sisa HP: "+hp;
+
+ document.getElementById("finalScore").textContent=
+ "⭐ TOTAL POIN: "+score;
+}
+</script>
+</body>
+</html>
